@@ -7,20 +7,46 @@ header('Access-Control-Allow-Headers: Access-Control-Allow-Headers, Content-Type
 
 $method = $_SERVER['REQUEST_METHOD']; //Variabel för att lagra medskickad metod
 
+
+
 switch ($method){
-    case "GET":
+    case "GET": //Get stored classes from database
         //Kod för get
+        $response = $c->getCourse();
+        if(sizeof($response)>0) {
+            http_response_code(200); //OK
+        } else {
+            http_response_code(400); //Not found
+            $response = array("message" => "No courses found."); //Error message
+        }
         break;
 
     case "PUT" : 
         //Kod för put
         break;
 
-    case "POST" :
+    case "POST" : //Add course to database
         //Kod för post
+        if($c->addCourse($input['name'], $input['code'], $input['progression'], $input['syllabus'])) {
+            http_response_code(201); // Created
+            $response = array("message" => "Database updated.");
+        } else {
+            http_response_code(500);
+            $response = array ("message" => "Error adding course."); //Error message
+        }
         break;
 
     case "DELETE" :
         //Kod för delete
+        if($c->deleteCourse($input['id'])) {
+            http_response_code(200); //Ok
+            $response = array("message" => "Course deleted.");
+        } else {
+            http_response_code(500); //Server error
+            $response = array("message" => "Error deleting course."); //Error message
+        }
         break;
 }
+
+//Returnerar resultat i JSON-format
+echo json_encode($respose);
