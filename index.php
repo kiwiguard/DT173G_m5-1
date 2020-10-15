@@ -23,6 +23,13 @@ switch ($method){
 
     case "PUT" : 
         //Kod för put
+        if($c->updateCourse($input['name'], $input['code'], $input['progression'], $input['syllabus'], $input['id'])) {
+            http_response_code(200); //OK
+            $response = array('message' => "Course updated.");
+        } else {
+            http_response_code('500');
+            $response = array('message' => 'Error updating course.'); //Error message
+        }
         break;
 
     case "POST" : //Add course to database
