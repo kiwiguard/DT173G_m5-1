@@ -13,7 +13,7 @@ class Database {
         $this->conn = null;
 
         try {
-            $this->conn = new PDO('mysqli:host=' . $this->host . ';dbname=' . $this->db_name, $this->username, $this->passaword);
+            $this->conn = new PDO('mysqli:host=' . $this->host . ';dbname=' . $this->db_name, $this->username, $this->password);
             $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         //Connection error
         } catch(PDOException $e) {
