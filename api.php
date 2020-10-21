@@ -1,49 +1,61 @@
 <?php
+/*
+ --------------------------------------------------------------------------------------------------------------------------
+ | ID (int, AI, primary key) | name (Varchar(64))| code (Varchar(64)) | progression (Varchar(1)) | syllabus (Varchar(512)) 
+ --------------------------------------------------------------------------------------------------------------------------
 
-require 'config/database.php';
-require 'config/errors.php';
-//require 'classes/classes.php';
+ Request:
+ Methods - http://localhost/moment5/api
+ */
 
-//headers som sätter information om webbtjänsten
+//headers
 header('Content-Type: application/json; charset=UTF-8');
 header('Acces-Control-Allow-Origin: *'); //Tillåter anrop ifrån alla domäner
 header('Access-Control-Allow-Origin: POST, GET, DELETE, PUT'); //Bestämmer vilka metoder som webbtjänsten tillåter
 header('Access-Control-Allow-Headers: Access-Control-Allow-Headers, Content-Type, Access-Control-Allow-Methods, Access-Control-Allow-Origin, Authorization, X-Requested-With');
 
+//includes
+include 'config/config.php'; //this loads all classfiles
+
+//set variable for request method
 $method = $_SERVER['REQUEST_METHOD']; //Variabel för att lagra medskickad metod
 if(isset($_GET['id'])) {
     $id = $_GET['id']; // Kontrollerar om id har skickats med i url, sparas i variabel id
 }
 
-//Initiate connection to database
 $database = new Database();
 $db = $database->connect();
 
-//Skapar instans av klassen för att skicka SQL-frågor till databasen
-//Skickar med databasanslutningen som parameter
+//set new instance of Courses class
 $c = new Courses($db);
 
+//Switch statement returns different data based on type of method
 switch ($method){
-    case 'GET': //Get stored classes from database
-        if(isset($id)) {
-            $response = $c->readOne($id); //Runs function to read course with matching id
-        } else {
-            $response = $c->read(); //If no id, read all courses
-        }
 
+    case 'GET': //Get stored classes from database
+        $response = $c->read();
         //Checks if query returns any data
-        if(sizeof($response)>0) {
+        if(count($response) > 0) {        
+                if(isset($id)) {
+                $response = $c->readOne($id); //Runs function to read course with matching id
+            } else {
+                $response = $c->read(); //If no id, read all courses
+            }
             http_response_code(200); //OK
         } else {
             http_response_code(400); //Not found
             $response = array('message' => 'No courses found.'); //Error message
         }
+
+
+
+
         break;
 
     case 'PUT' : 
         if(!isset($id)) {
             http_response_code(510); //Not Extended
-            $result = array('message' => 'No id sent');
+            $response = array('message' => 'No id sent');
         } else {
             $input = json_decode(file_get_contents('php://input'));
         }
@@ -72,7 +84,7 @@ switch ($method){
     case 'DELETE' : //Delete course from database
         if(!isset($id)) {
             http_response_code(510); //Not Extended
-            $result = array('message' => 'No id sent');
+            $response = array('message' => 'No id sent');
         } else {
             //Run function to delete course
             if($c->deleteCourse($id)) {
