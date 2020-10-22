@@ -2,22 +2,22 @@
 
 class Database {
     /* Database settings */
-    private $host = 'localhost';
-    private $dbname = 'api_m5';
+    private $dsn = 'mysql:host=localhost;dbname=api_m5';
     private $user = 'courses_admin';
     private $pwd = 'password';
-    private $conn;
 
     /* Database connection */
-    public function connect() {
+    protected function connect() {
         try {
-            $this->conn = new PDO('mysqli:host=' . $this->host . ';dbname=' . $this->user, $this->pwd);
-            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $pdo = new PDO($this->dsn, $this->user, $this->pwd);
+            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+            return $pdo;
+
         //Connection error
         } catch(PDOException $e) {
-            echo 'Connection Error: ' . $e->getMessage();
+            throw $e;
+            throw new PDOException('Could not connect to database');
         }
-
-        return $this->conn;
-    }  
+    } 
 }

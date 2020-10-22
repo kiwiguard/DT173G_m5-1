@@ -19,87 +19,80 @@ include 'config/config.php'; //this loads all classfiles
 
 //set variable for request method
 $method = $_SERVER['REQUEST_METHOD']; //Variabel för att lagra medskickad metod
+
+//checks if id is sent
 if(isset($_GET['id'])) {
-    $id = $_GET['id']; // Kontrollerar om id har skickats med i url, sparas i variabel id
+    $id = $_GET['id'];
 }
 
-$database = new Database();
-$db = $database->connect();
-
 //set new instance of Courses class
-$c = new Courses($db);
+$c = new Courses();
 
 //Switch statement returns different data based on type of method
 switch ($method){
 
     case 'GET': //Get stored classes from database
-        $response = $c->read();
-        //Checks if query returns any data
-        if(count($response) > 0) {        
-                if(isset($id)) {
-                $response = $c->readOne($id); //Runs function to read course with matching id
-            } else {
-                $response = $c->read(); //If no id, read all courses
-            }
+        $result = $c->read();
+        if (count($result) > 0) {
             http_response_code(200); //OK
         } else {
-            http_response_code(400); //Not found
-            $response = array('message' => 'No courses found.'); //Error message
+            http_response_code(404); //Not found
+            $result = array('message' => 'No courses found.'); //Error message
         }
+        // if(!isset($id)) {
+        //     $result = $c->read();
+        // } else {
+        //     $result = $c->readOne($id);
+        // }
 
-
-
+        // //Checks if query returns any data
+        // if(count($result) > 0) {        
+        //     http_response_code(200); //OK
+        // } else {
+        //     http_response_code(400); //Not found
+        //     $result = array('message' => 'No courses found.'); //Error message
+        // }
 
         break;
 
     case 'PUT' : 
         if(!isset($id)) {
-            http_response_code(510); //Not Extended
-            $response = array('message' => 'No id sent');
+            http_response_code(510); 
+            $result = array('message' => 'No id sent');
         } else {
             $input = json_decode(file_get_contents('php://input'));
-        }
-
-        if ($c->updateCourse($input->name, $input->code, $input->progression, $input->syllabus)) {
+            if ($c->updateCourse($input->name, $input->code, $input->progression, $input->syllabus, $id)) {
                 http_response_code(200); //OK
-                $response = array('message' => 'Course updated.');
-        } else {
-            http_response_code('500');
-            $response = array('message' => 'Error updating course.'); //Error message
-        }
-        break;
+                $result = array('message' => 'Course updated.');
+            } else {
+                http_response_code('503');
+                $result = array('message' => 'Error updating course.'); //Error message
+        } 
+    }
+    break;
 
     case 'POST' : //Add course to database
         $input = json_decode(file_get_contents('php://input'));
-
-        if($c->addCourse($input->name, $input->code, $input->progression, $input->syllabus)) {
-            http_response_code(201); // Created
-            $response = array('message' => 'Courses updated.');
+        if($c->addCourse($input->name, $input->code, $input->progression, $input->syllabus)){
+            http_response_code(200); //OK
+            $result = array('message' => 'Course added');
         } else {
-            http_response_code(500);
-            $response = array ('message' => 'Error adding course.'); //Error message
+            http_response_code(503); //Not found
+            $result = array('message' => 'Could not add course'); //Error message
         }
-        break;
+    break;
 
     case 'DELETE' : //Delete course from database
-        if(!isset($id)) {
-            http_response_code(510); //Not Extended
-            $response = array('message' => 'No id sent');
-        } else {
-            //Run function to delete course
-            if($c->deleteCourse($id)) {
-                http_response_code(200); //Ok
-                $response = array('message' => 'Course deleted.');
+            $input = json_decode(file_get_contents('php://input'));
+            if ($c->deleteCourse($id)) {
+                http_response_code(200); //OK
+                $result = array('message' => 'Course deleted.');
             } else {
-                http_response_code(500); //Server error
-                $response = array('message' => 'Error deleting course.'); //Error message
-            }
+                http_response_code('503');
+                $result = array('message' => 'Error deleting course.'); //Error message
         }
-        break;
+    break;
 }
 
 //Return result in JSON-format
-echo json_encode($respose);
-
-//Close database connection
-$db = $database->close();
+echo json_encode($result);
