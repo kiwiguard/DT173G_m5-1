@@ -5,7 +5,7 @@
  --------------------------------------------------------------------------------------------------------------------------
 
  Request:
- Methods - http://localhost/moment5/api
+ Methods - http://localhost/DT173G_m5-1/api
  */
 
 //headers
