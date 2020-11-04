@@ -50,7 +50,7 @@ switch ($method){
             http_response_code(510); 
             $result = array('message' => 'No id sent');
         } else {
-            $input = json_decode(file_get_contents('php://input'), true);
+            $input = json_decode(file_get_contents('php://input'));
             if ($c->updateCourse($input->name, $input->code, $input->progression, $input->syllabus, $id)) {
                 http_response_code(200); //OK
                 $result = array('message' => 'Course updated.');

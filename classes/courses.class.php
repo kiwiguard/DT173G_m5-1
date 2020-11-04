@@ -69,18 +69,15 @@ class Courses extends Database {
 
     //update course
     public function updateCourse($inname, $incode, $inprogression, $insyllabus, $id) {
-        if(isset($_GET['id'])) {
-            $id = $_GET['id'];
-            $stmt = $this->connect()->prepare('UPDATE courses SET name=?, code=?, progression=?, syllabus=? WHERE id=?');
+            $stmt = $this->connect()->prepare('UPDATE courses SET name=?, code=?, progression=?, syllabus=? WHERE id= ' . $id);
             if($this->cleanInput($inname, $incode, $inprogression, $insyllabus)) {
-                if($stmt->execute([$this->name, $this->code, $this->progression, $this->syllabus, $this->id])) {
+                if($stmt->execute([$this->name, $this->code, $this->progression, $this->syllabus])) {
                     return true;
                 } else {
                     return false;
                 }
                 $stmt->execute([]);
             }
-        }
     }
 
     //delete course from db
