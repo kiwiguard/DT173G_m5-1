@@ -9,34 +9,10 @@ class Courses extends Database {
     public $progression;
     public $syllabus;
 
-    //Strips input data of tags
-    function cleanInput($name, $code, $progression, $syllabus) {
-        $this->name = strip_tags($name);
-        $this->code = strip_tags($code);
-        $this->progression = strip_tags($progression);
-        $this->syllabus = strip_tags($syllabus);
-
-        if($this->code !='') {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    function checkId($id) {
-        $stmt = $this->connect()->prepare('SELECT * FROM courses WHERE id=?');
-        $stmt->execute(['$id']);
-        $count = $stmt->fetch();
-        if($count) {
-            return true;
-        } else {
-            return false;
-        }
-    }
 
     //Get all courses from db
     function read() {
-        $stmt = $this->connect()->prepare('SELECT * FROM courses');
+        $stmt = $this->connect()->prepare('SELECT * FROM susanneni_dt173g.courses');
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -44,7 +20,7 @@ class Courses extends Database {
 
     //get single course from db
     public function readOne($id) {
-        $stmt = $this->connect()->prepare('SELECT * FROM courses WHERE id =' . $id );
+        $stmt = $this->connect()->prepare('SELECT * FROM susanneni_dt173g.courses WHERE id =' . $id );
         $stmt->execute();
         $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -56,37 +32,74 @@ class Courses extends Database {
     }
 
     //add course to db
-    public function addCourse($inname, $incode, $inprogression, $insyllabus) {
-        $stmt = $this->connect()->prepare('INSERT INTO courses (name, code, progression, syllabus) VALUES (?, ?, ?, ?)');
-        if($this->cleanInput($inname, $incode, $inprogression, $insyllabus)) {
-            if($stmt->execute([$this->name, $this->code, $this->progression, $this->syllabus])) {
-                return true;
-            } else {
-                return false;
-            }
+    public function addCourse() {
+        $q = 'INSERT INTO susanneni_dt173g.courses 
+        SET
+            name = :name,
+            code = :code,
+            progression = :progression,
+            syllabus = :syllabus';
+
+        $stmt = $this->connect()->prepare($q);
+
+        //strip data of tags
+        $this->name = htmlspecialchars(strip_tags($this->name));
+        $this->code = htmlspecialchars(strip_tags($this->code));
+        $this->progression = htmlspecialchars(strip_tags($this->progression));
+        $this->syllabus = htmlspecialchars(strip_tags($this->syllabus));
+
+        // bind data
+        $stmt->bindParam(':name', $this->name);
+        $stmt->bindParam(':code', $this->code);
+        $stmt->bindParam(':progression', $this->progression);
+        $stmt->bindParam(':syllabus', $this->syllabus);
+
+        if($stmt->execute()) {
+            return true;
+        } else {
+            printif('Error: %s.\n', $stmt->error);
+            return false;
         }
      } 
 
     //update course
-    public function updateCourse($inname, $incode, $inprogression, $insyllabus, $id) {
-            $stmt = $this->connect()->prepare('UPDATE courses SET name=?, code=?, progression=?, syllabus=? WHERE id= ' . $id);
-            if($this->cleanInput($inname, $incode, $inprogression, $insyllabus)) {
-                if($stmt->execute([$this->name, $this->code, $this->progression, $this->syllabus])) {
-                    return true;
-                } else {
-                    return false;
-                }
-                $stmt->execute([]);
-            }
+    public function updateCourse($id) {
+        $stmt = $this->connect()->prepare('UPDATE susanneni_dt173g.courses 
+            SET 
+                name = :name,
+                code = :code,
+                progression = :progression,
+                syllabus = :syllabus
+            WHERE
+                id = :id');
+        //strip data of tags
+        $this->name = htmlspecialchars(strip_tags($this->name));
+        $this->code = htmlspecialchars(strip_tags($this->code));
+        $this->progression = htmlspecialchars(strip_tags($this->progression));
+        $this->syllabus = htmlspecialchars(strip_tags($this->syllabus));
+
+        // bind data
+        $stmt->bindParam(':id', $id);
+        $stmt->bindParam(':name', $this->name);
+        $stmt->bindParam(':code', $this->code);
+        $stmt->bindParam(':progression', $this->progression);
+        $stmt->bindParam(':syllabus', $this->syllabus);
+
+        if($stmt->execute()) {
+            return true;
+        } else {
+            printif('Error: %s.\n', $stmt->error);
+            return false;
+        }
     }
 
     //delete course from db
     public function deleteCourse($id) {
-            $stmt = $this->connect()->prepare('DELETE FROM courses WHERE id= ' . $id);
+            $stmt = $this->connect()->prepare('DELETE FROM susanneni_dt173g.courses WHERE id= ' . $id);
             if($stmt->execute()) {
                     return true;
             } else {
                 return false;
             }
         }
-}
+    }

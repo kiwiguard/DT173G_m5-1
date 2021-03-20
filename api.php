@@ -1,4 +1,7 @@
 <?php
+ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+error_reporting(E_ALL);
 /*
  --------------------------------------------------------------------------------------------------------------------------
  | ID (int, AI, primary key) | name (Varchar(64))| code (Varchar(64)) | progression (Varchar(1)) | syllabus (Varchar(512)) 
@@ -6,16 +9,17 @@
 
  Request:
  Methods - http://localhost/DT173G_m5-1/api
+ Methods - https://dt173g.susanne-nilsson.se/src/api.php
  */
+ //includes
+require 'classes/database.class.php';
+require 'classes/courses.class.php';
 
 //headers
 header('Content-Type: application/json; charset=UTF-8');
 header('Acces-Control-Allow-Origin: *'); //Tillåter anrop ifrån alla domäner
 header('Access-Control-Allow-Origin: POST, GET, DELETE, PUT'); //Bestämmer vilka metoder som webbtjänsten tillåter
 header('Access-Control-Allow-Headers: Access-Control-Allow-Headers, Content-Type, Access-Control-Allow-Methods, Access-Control-Allow-Origin, Authorization, X-Requested-With');
-
-//includes
-include 'config/config.php'; //this loads all classfiles
 
 //set variable for request method
 $method = $_SERVER['REQUEST_METHOD']; //Variabel för att lagra medskickad metod
@@ -24,6 +28,10 @@ $method = $_SERVER['REQUEST_METHOD']; //Variabel för att lagra medskickad metod
 if(isset($_GET['id'])) {
     $id = $_GET['id'];
 }
+
+// db connection
+$database = new Database();
+$db = $database->connect();
 
 //set new instance of Courses class
 $c = new Courses();
@@ -45,13 +53,37 @@ switch ($method){
         }
         break;
 
+    case 'POST' : // add post to db
+        $d = json_decode(file_get_contents('php://input'));
+
+        $c->name = $d->name;
+        $c->code = $d->code;
+        $c->progression = $d->progression;
+        $c->syllabus = $d->syllabus;
+
+        if($c->addCourse()) {
+            http_response_code(200); //OK
+            $result = array('message' => 'Post added.'); //Success message
+        } else {
+            http_response_code(503); //Not found
+            $result = array('message' => 'Could not add post.'); //Error message
+        }
+
+    break;
+
     case 'PUT' : 
         if(!isset($id)) {
             http_response_code(510); 
             $result = array('message' => 'No id sent');
         } else {
-            $input = json_decode(file_get_contents('php://input'));
-            if ($c->updateCourse($input->name, $input->code, $input->progression, $input->syllabus, $id)) {
+            $d = json_decode(file_get_contents('php://input'));
+
+            $c->name = $d->name;
+            $c->code = $d->code;
+            $c->progression = $d->progression;
+            $c->syllabus = $d->syllabus;
+
+            if ($c->updateCourse($id)) {
                 http_response_code(200); //OK
                 $result = array('message' => 'Course updated.');
             } else {
@@ -59,17 +91,6 @@ switch ($method){
                 $result = array('message' => 'Error updating course.'); //Error message
         } 
     }
-    break;
-
-    case 'POST' : //Add course to database
-        $input = json_decode(file_get_contents('php://input'));
-        if($c->addCourse($input->name, $input->code, $input->progression, $input->syllabus)){
-            http_response_code(200); //OK
-            $result = array('message' => 'Course added');
-        } else {
-            http_response_code(503); //Not found
-            $result = array('message' => 'Could not add course'); //Error message
-        }
     break;
 
     case 'DELETE' : //Delete course from database
